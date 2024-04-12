@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:16.10.1-ce.0
+    container_name: gitlab
+    hostname: gitlab.direbo.ru
+    environment:
+      GITLAB_OMNIBUS_CONFIG: | 
+        external_url 'https://direbo.ru'
+        registry_external_url 'https://direbo.ru:5005'
+        registry['enable'] = true
+        letsencrypt['enable'] = false
+    ports: 
+      - '443:443'
+    volumes:
+      - /home/ubuntu/src/gitlab/config:/etc/gitlab
+      - /home/ubuntu/src/gitlab/data:/var/opt/gitlab
+      - /home/ubuntu/src/gitlab/logs:/var/log/gitlab  
+    restart: always
+    networks:
+      - gitlab-network
+  runner:
+    image: gitlab/gitlab-runner:alpine3.19-bleeding
+    restart: always
+    container_name: runner
+    depends_on:
+      - gitlab
+    volumes:
+      - /home/ubuntu/src/gitlab/runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - gitlab-network
+networks:
+  gitlab-network:
+    name: gitlab-network
+    external: true
